@@ -1,0 +1,63 @@
+Q.1) Print the type of file and inode number where file name accepted through Command Line [10 
+Marks ] 
+#include <stdio.h> 
+#include <sys/stat.h> 
+#include <time.h> 
+int main(int argc, char *argv[]) { 
+struct stat file_stat; 
+if (stat(argv[1], &file_stat) != 0) { 
+perror("stat"); 
+return 1; 
+} 
+printf("Inode: %ld\n", file_stat.st_ino); 
+printf("Links: %ld\n", file_stat.st_nlink); 
+printf("Permissions: %o\n", file_stat.st_mode & 0777); 
+printf("Size: %ld bytes\n", file_stat.st_size); 
+printf("Access time: %s", ctime(&file_stat.st_atime)); 
+printf("Modification time: %s", ctime(&file_stat.st_mtime)); 
+return 0; 
+} 
+Q.2) Write a C program which creates a child process to run linux/ unix command or any user 
+defined program. The parent process set the signal handler for death of child signal and Alarm 
+signal. If a child process does not complete its execution in 5 second then parent process kills 
+child process [20 Marks ] 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <unistd.h> 
+#include <signal.h> 
+#include <sys/wait.h> 
+pid_t child_pid; 
+ 
+void handle_alarm(int sig) { 
+    printf("Child did not finish in 5 seconds, killing child\n"); 
+    kill(child_pid, SIGKILL); 
+} 
+ 
+void handle_child_death(int sig) { 
+    int status; 
+    waitpid(child_pid, &status, 0); 
+ 
+    if (WIFEXITED(status)) { 
+        printf("Child finished normally with status %d\n", WEXITSTATUS(status)); 
+    } else if (WIFSIGNALED(status)) { 
+        printf("Child killed by signal %d\n", WTERMSIG(status)); 
+    } 
+} 
+ 
+int main() { 
+    signal(SIGALRM, handle_alarm);       // Set signal handler for alarm 
+    signal(SIGCHLD, handle_child_death); // Set signal handler for child termination 
+ 
+    child_pid = fork(); 
+ 
+    if (child_pid == 0) { // Child process 
+        printf("Child process running\n"); 
+        sleep(10); // Simulate a long-running task 
+        printf("Child process finished\n"); 
+        exit(0); 
+    } else { // Parent process 
+        alarm(5);  // Set alarm for 5 seconds 
+pause();   // Wait for either alarm or child termination 
+} 
+return 0; 
+}
