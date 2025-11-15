@@ -1,0 +1,52 @@
+1] Take multiple files as Command Line Arguments and print their inode numbers and file types 
+
+#include <stdio.h> 
+#include <sys/stat.h> 
+ 
+int main(int argc, char *argv[]) { 
+    struct stat file_stat; 
+    for (int i = 1; i < argc; i++) { 
+        if (stat(argv[i], &file_stat) == -1) { 
+            perror("stat"); 
+            continue; 
+        } 
+        printf("File: %s, Inode: %ld, ", argv[i], file_stat.st_ino); 
+        if (S_ISREG(file_stat.st_mode)) printf("Regular file\n"); 
+        else if (S_ISDIR(file_stat.st_mode)) printf("Directory\n"); 
+        else if (S_ISCHR(file_stat.st_mode)) printf("Character device\n"); 
+        else if (S_ISBLK(file_stat.st_mode)) printf("Block device\n"); 
+        else if (S_ISFIFO(file_stat.st_mode)) printf("FIFO\n"); 
+        else if (S_ISLNK(file_stat.st_mode)) printf("Symbolic link\n"); 
+        else if (S_ISSOCK(file_stat.st_mode)) printf("Socket\n"); 
+        else printf("Unknown file type\n"); 
+    } 
+    return 0; 
+} 
+
+Q.2) Write a C program to send SIGALRM signal by child process to parent process and parent 
+process make a provision to catch the signal and display alarm is fired.(Use Kill, fork, signal and 
+sleep system call) [20 Marks ]
+
+#include <stdio.h> 
+#include <unistd.h> 
+#include <stdlib.h> 
+#include <signal.h> 
+#include <sys/wait.h> 
+ 
+void handle_sigalrm(int sig) { 
+    printf("Alarm is fired by the child process\n"); 
+} 
+ 
+int main() { 
+    pid_t pid = fork(); 
+    if (pid == 0) { 
+        sleep(2); 
+        kill(getppid(), SIGALRM); 
+        exit(0); 
+    } else { 
+        signal(SIGALRM, handle_sigalrm); 
+        pause(); 
+        wait(NULL); 
+    } 
+    return 0; 
+} 
