@@ -1,0 +1,78 @@
+Q.1) Display all the files from current directory which are created in particular month [10 Marks ] 
+
+#include <stdio.h> 
+#include <dirent.h> 
+ 
+int main() { 
+    DIR *dir; 
+    struct dirent *entry; 
+    int file_count = 0; 
+ 
+    dir = opendir("."); 
+    if (dir == NULL) { 
+        perror("opendir"); 
+        return 1; 
+    } 
+ 
+    printf("Files in the current directory:\n"); 
+    while ((entry = readdir(dir)) != NULL) { 
+        printf("%s\n", entry->d_name); 
+        file_count++; 
+    } 
+ 
+    closedir(dir); 
+    printf("Total number of files: %d\n", file_count); 
+    return 0; 
+} 
+ 
+Q.2) Write a C program which create a child process which catch a signal sighup, sigint and 
+sigquit. The Parent process send a sighup or sigint signal after every 3 seconds, at the end of 30 
+second parent send sigquit signal to child and child terminates my displaying message “My 
+DADDY has Killed me!!!”. [20 Marks ] 
+
+#include <stdio.h> 
+#include <unistd.h> 
+#include <stdlib.h> 
+#include <signal.h> 
+ 
+void handle_signal(int sig) { 
+    if (sig == SIGHUP) { 
+        printf("Child received SIGHUP signal\n"); 
+    } else if (sig == SIGINT) { 
+        printf("Child received SIGINT signal\n"); 
+    } else if (sig == SIGQUIT) { 
+        printf("My DADDY has Killed me!!!\n"); 
+        exit(0); 
+    } 
+} 
+ 
+int main() { 
+    pid_t pid = fork(); 
+ 
+    if (pid == 0) { // Child process 
+        signal(SIGHUP, handle_signal); 
+        signal(SIGINT, handle_signal); 
+        signal(SIGQUIT, handle_signal); 
+ 
+        while (1) { 
+            pause(); // Wait for signals 
+        } 
+    } else { // Parent process 
+        sleep(1); // Allow child to set up signal handlers 
+ 
+        for (int i = 0; i < 10; i++) { 
+            if (i % 2 == 0) { 
+                kill(pid, SIGHUP); 
+            } else { 
+                kill(pid, SIGINT); 
+            } 
+            sleep(3); 
+        } 
+ 
+        // After 30 seconds, send SIGQUIT 
+        kill(pid, SIGQUIT); 
+ 
+        wait(NULL); // Wait for the child to terminate 
+        return 0; 
+    } 
+}
