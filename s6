@@ -1,0 +1,68 @@
+Q.1) Display all the files from current directory which are created in particular month [10 Marks ] 
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <dirent.h> 
+#include <sys/stat.h> 
+#include <time.h> 
+ 
+int main(int argc, char *argv[]) { 
+    if (argc != 2) { 
+        printf("Usage: %s <month number>\n", argv[0]); 
+        return 1; 
+    } 
+ 
+    int month = atoi(argv[1]); 
+    DIR *dr = opendir("."); 
+    struct dirent *entry; 
+    struct stat st; 
+ 
+    while ((entry = readdir(dr)) != NULL) { 
+        stat(entry->d_name, &st); 
+        struct tm *timeinfo = localtime(&st.st_ctime); 
+        if (timeinfo->tm_mon + 1 == month) { 
+            printf("%s\t%ld\t%s", entry->d_name, st.st_size, ctime(&st.st_ctime)); 
+        } 
+    } 
+ 
+    closedir(dr); 
+    return 0; 
+} 
+ 
+Q.2) Write a C program to create n child processes. When all n child processes terminates, 
+Display total cumulative time children spent in user and kernel mode [20 Marks ] 
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <unistd.h> 
+#include <sys/wait.h> 
+#include <sys/resource.h> 
+ 
+int main() { 
+    int n; 
+    printf("Enter the number of child processes: "); 
+    scanf("%d", &n); 
+ 
+    pid_t pid; 
+    struct rusage usage; 
+    int status; 
+ 
+    for (int i = 0; i < n; i++) { 
+        pid = fork(); 
+        if (pid == 0) { 
+            sleep(2); 
+            exit(0); 
+        } 
+    } 
+ 
+    for (int i = 0; i < n; i++) { 
+        wait(&status); 
+} 
+if (getrusage(RUSAGE_CHILDREN, &usage) == 0) { 
+printf("Total user time: %ld.%06ld seconds\n", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec); 
+printf("Total system time: %ld.%06ld seconds\n", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec); 
+} else { 
+perror("getrusage"); 
+} 
+return 0; 
+}
