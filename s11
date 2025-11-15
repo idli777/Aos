@@ -1,0 +1,45 @@
+Q.1) Write a C program to get and set the resource limits such as files, memory associated with a 
+process [10 Marks ] 
+
+#include <stdio.h> 
+#include <sys/resource.h> 
+ 
+int main() { 
+    struct rlimit file_limit; 
+ 
+    if (getrlimit(RLIMIT_NOFILE, &file_limit) == 0) { 
+        printf("Current file limit: soft = %ld, hard = %ld\n", 
+               file_limit.rlim_cur, 
+               file_limit.rlim_max); 
+    } else { 
+        perror("getrlimit"); 
+    } 
+ 
+    file_limit.rlim_cur = 2048; 
+    file_limit.rlim_max = 4096; 
+ 
+    if (setrlimit(RLIMIT_NOFILE, &file_limit) == 0) { 
+        printf("New file limit: soft = %ld, hard = %ld\n", 
+               file_limit.rlim_cur, 
+               file_limit.rlim_max); 
+    } else { 
+        perror("setrlimit"); 
+    } 
+ 
+    return 0; 
+} 
+ 
+Q.2) Write a C program that redirects standard output to a file output.txt. (use of dup and open 
+system call). [20 Marks ] 
+
+#include <stdio.h> 
+int main() { 
+FILE *file = freopen("output.txt", "w", stdout); 
+if (file == NULL) { 
+perror("freopen"); 
+return 1; 
+} 
+printf("This text will be written to output.txt\n"); 
+fclose(file); 
+return 0; 
+}
