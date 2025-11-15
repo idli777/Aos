@@ -1,0 +1,90 @@
+Q.1) Display all the files from current directory whose size is greater that n Bytes Where n is 
+accept from user [10 Marks ] 
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <dirent.h> 
+#include <sys/stat.h> 
+#include <string.h> 
+ 
+int main(int argc, char *argv[]) { 
+    struct dirent *entry; 
+    struct stat file_stat; 
+    DIR *dir; 
+    long size_threshold; 
+ 
+    if (argc != 2) { 
+        printf("Usage: %s <size in bytes>\n", argv[0]); 
+        return 1; 
+    } 
+ 
+    size_threshold = atol(argv[1]); 
+ 
+    dir = opendir("."); 
+    if (dir == NULL) { 
+        perror("opendir"); 
+        return 1; 
+    } 
+ 
+    while ((entry = readdir(dir)) != NULL) { 
+        if (stat(entry->d_name, &file_stat) == 0) { 
+            if (S_ISREG(file_stat.st_mode) && 
+                file_stat.st_size > size_threshold) { 
+                printf("%s (%ld bytes)\n", entry->d_name, file_stat.st_size); 
+            } 
+        } else { 
+            perror("stat"); 
+        } 
+    } 
+ 
+    closedir(dir); 
+    return 0; 
+} 
+ 
+Q.2) Write a C program which creates a child process to run linux/ unix command or any user 
+defined program. The parent process set the signal handler for death of child signal and Alarm 
+signal. If a child process does not complete its execution in 5 second then parent process kills 
+child process [20 Marks ]
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <unistd.h> 
+#include <signal.h> 
+#include <sys/wait.h> 
+ 
+pid_t child_pid; 
+ 
+void handle_alarm(int sig) { 
+    printf("Child did not finish in 5 seconds, killing child\n"); 
+    kill(child_pid, SIGKILL); 
+} 
+ 
+void handle_child_death(int sig) { 
+    int status; 
+    waitpid(child_pid, &status, 0); 
+ 
+    if (WIFEXITED(status)) { 
+        printf("Child finished normally with status %d\n", WEXITSTATUS(status)); 
+    } else if (WIFSIGNALED(status)) { 
+        printf("Child killed by signal %d\n", WTERMSIG(status)); 
+    } 
+} 
+ 
+int main() { 
+    signal(SIGALRM, handle_alarm);       // Set signal handler for alarm 
+    signal(SIGCHLD, handle_child_death); // Set signal handler for child termination 
+ 
+    child_pid = fork(); 
+ 
+    if (child_pid == 0) { // Child process 
+        printf("Child process running\n"); 
+        sleep(10); // Simulate a long-running task 
+        printf("Child process finished\n"); 
+        exit(0); 
+    } else { // Parent process 
+        alarm(5);  // Set alarm for 5 seconds 
+        pause();   // Wait for either alarm or child termination 
+    } 
+ 
+    return 0; 
+}
